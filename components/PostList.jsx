@@ -1,6 +1,6 @@
 import { apiFetch, getToken,getUserFromToken } from '../src/api.js';
 import ErrorBanner from './Error.jsx';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState,useRef } from 'react';
 import { Link } from 'react-router-dom';
 const PAGE_SIZE = 5;
 
@@ -15,55 +15,100 @@ export default function PostList() {
   const [items, setItems] = useState([]);
   const [categorias, setCategorias] = useState([]);
   const [q, setQ] = useState('');
+  const [debouncedQ, setDebouncedQ] = useState('');
   const [cat, setCat] = useState('');
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(false); // no borra lista; solo muestra "Cargando…"
   const [error, setError] = useState('');
 
   const token = getToken();
   const user = getUserFromToken();
 
-  // Cargar categorías
+  // Debounce para q (evita múltiples fetch por tecla)
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedQ(q.trim()), 300);
+    return () => clearTimeout(t);
+  }, [q]);
+
+  // Cargar categorías de forma segura
   useEffect(() => {
     (async () => {
       try {
         const res = await apiFetch('/categorias');
-        setCategorias(res.data || []);
+        const arr = Array.isArray(res?.data) ? res.data : [];
+        setCategorias(arr);
       } catch {
-        // no crítico
+        setCategorias([]); // ante error, array vacío
       }
     })();
   }, []);
 
-  // Cargar publicaciones paginadas (cuando cambian filtros/página)
+  // Control de carreras entre requests
+  const reqSeq = useRef(0);
+  const abortRef = useRef(null);
+
+  // Al cambiar filtros, regresa a página 1
   useEffect(() => {
-    (async () => {
+    setPage(1);
+  }, [debouncedQ, cat]);
+
+  useEffect(() => {
+    const doFetch = async () => {
       setLoading(true);
       setError('');
+
+      // Abortar petición previa
+      if (abortRef.current) abortRef.current.abort();
+      const controller = new AbortController();
+      abortRef.current = controller;
+
+      const mySeq = ++reqSeq.current;
+
       try {
         const usp = new URLSearchParams();
-        if (q.trim()) usp.set('q', q.trim());
+        if (debouncedQ) usp.set('q', debouncedQ);
         if (cat) usp.set('category', cat);
         usp.set('page', String(page));
         usp.set('pageSize', String(PAGE_SIZE));
 
-        const res = await apiFetch(`/publicaciones?${usp.toString()}`); // { data: { items, page, pageSize, total, totalPages } }
-        const data = res.data || {};
-        setItems(data.items || []);
-        setTotal(data.total || 0);
-        setTotalPages(data.totalPages || 1);
-      } catch (e) {
-        setError(e.message);
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, [q, cat, page]);
+        // Usamos fetch directo para pasar signal (apiFetch no expone signal)
+        const base = import.meta.env.VITE_API_BASE || 'http://localhost:3000/api';
+        const res = await fetch(`${base}/publicaciones?${usp.toString()}`, {
+          headers: { 'Content-Type': 'application/json' },
+          signal: controller.signal
+        });
 
-  // Si cambian filtros, vuelve a la 1ra página
-  useEffect(() => { setPage(1); }, [q, cat]);
+        let data;
+        try { data = await res.json(); }
+        catch { data = { message: res.ok ? 'OK' : `HTTP ${res.status}` }; }
+
+        if (!res.ok) {
+          const baseMsg = data?.message || `Error HTTP ${res.status}`;
+          throw new Error(baseMsg);
+        }
+
+        // Ignora si no es la última petición
+        if (mySeq !== reqSeq.current) return;
+
+        const payload = data.data || {};
+        setItems(Array.isArray(payload.items) ? payload.items : []);
+        setTotal(Number(payload.total || 0));
+        setTotalPages(Number(payload.totalPages || 1));
+      } catch (e) {
+        if (e.name === 'AbortError') return; // petición cancelada, ignora
+        setError(e.message || 'Error al cargar publicaciones');
+      } finally {
+        if (mySeq === reqSeq.current) setLoading(false);
+      }
+    };
+
+    doFetch();
+    return () => {
+      if (abortRef.current) abortRef.current.abort();
+    };
+  }, [debouncedQ, cat, page]);
 
   return (
     <div>
@@ -79,7 +124,7 @@ export default function PostList() {
         />
         <select value={cat} onChange={e => setCat(e.target.value)}>
           <option value="">Todas</option>
-          {categorias.map(c => (
+          {Array.isArray(categorias) && categorias.map(c => (
             <option key={c.category_id} value={c.category_title}>
               {c.category_title}
             </option>
@@ -88,7 +133,7 @@ export default function PostList() {
         {token && <Link to="/crear">Crear</Link>}
       </div>
 
-      {loading && <p>Cargando…</p>}
+      {loading && <p style={{ opacity: 0.7 }}>Cargando…</p>}
       {!loading && items.length === 0 && <p>No hay publicaciones para mostrar.</p>}
 
       <ul style={{ listStyle: 'none', padding: 0, display: 'grid', gap: 12 }}>
