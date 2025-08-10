@@ -118,19 +118,7 @@ export default function PostList() {
       onChange={e => setQ(e.target.value)}
       style={{ flex: 1 }}
     />
-  </div>
-  <select 
-    value={cat} 
-    onChange={e => setCat(e.target.value)}
-    style={{ width: '100%' }}
-  >
-    <option value="">Todas</option>
-    {Array.isArray(categorias) && categorias.map(c => (
-      <option key={c.category_id} value={c.category_title}>
-        {c.category_title}
-      </option>
-    ))}
-  </select>
+  </div> 
 </div>
 
       {loading && <p style={{ opacity: 0.7 }}>Cargando…</p>}
