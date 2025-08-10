@@ -118,7 +118,6 @@ export default function PostList() {
       onChange={e => setQ(e.target.value)}
       style={{ flex: 1 }}
     />
-    {token && <Link to="/crear">Crear</Link>}
   </div>
   <select 
     value={cat} 
