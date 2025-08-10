@@ -18,7 +18,7 @@ export default function PostForm({ mode }) {
     category_title: ''
   });
   const [categorias, setCategorias] = useState([]);
-  const [pubs, setPubs] = useState([]); // fallback si categorías no cargan
+  const [pubs, setPubs] = useState([]); // fallback si /categorias falla
   const [error, setError] = useState('');
   const [bloqueado, setBloqueado] = useState(false);
 
@@ -33,33 +33,38 @@ export default function PostForm({ mode }) {
     setForm(prev => ({ ...prev, [name]: value }));
   }
 
-  // --- Cargar categorías (API principal) ---
+  // --- Cargar categorías (principal) ---
   useEffect(() => {
     (async () => {
       try {
-        const res = await apiFetch('/categorias/categoria/1');   // { data: [...] }
-        setCategorias(res.data || []);
+        const res = await apiFetch('/categorias/categoria/1');   // { status, success, data: [...] }
+        const arr = Array.isArray(res?.data) ? res.data : [];
+        setCategorias(arr);
       } catch {
-        // si falla, no es crítico; usamos fallback
+        setCategorias([]); // usaremos fallback
       }
     })();
   }, []);
 
-  // --- Fallback: derivar categorías de publicaciones si /categorias no está disponible ---
+  // --- Fallback: derivar categorías desde publicaciones (usar items paginados) ---
   useEffect(() => {
     (async () => {
       try {
-        const res = await apiFetch('/publicaciones'); // { data: [...] }
-        setPubs(res.data || []);
+        const res = await apiFetch('/publicaciones'); // ahora responde { data: { items, ... } }
+        const items = Array.isArray(res?.data?.items) ? res.data.items : [];
+        setPubs(items);
       } catch {
-        // ignorar
+        setPubs([]);
       }
     })();
   }, []);
 
   const categoriasFallback = useMemo(() => {
+    const arr = Array.isArray(pubs) ? pubs : [];
     const set = new Set();
-    for (const p of pubs) if (p?.categoria) set.add(p.categoria);
+    for (const p of arr) {
+      if (p?.categoria) set.add(p.categoria);
+    }
     return Array.from(set).sort();
   }, [pubs]);
 
@@ -95,7 +100,7 @@ export default function PostForm({ mode }) {
     e.preventDefault();
     setError('');
 
-    // Normalizar opcionales a null si están vacíos
+    // Normalizar opcionales a null si están vacíos y eliminar nulls
     const payload = {
       title: (form.title || '').trim(),
       content_line1: (form.content_line1 || '').trim(),
@@ -103,11 +108,7 @@ export default function PostForm({ mode }) {
       image: toNullIfEmpty(form.image),
       category_title: (form.category_title || '').trim()
     };
-
-    // 🔑 Quitar claves con null para que Zod .optional() no falle
-    Object.keys(payload).forEach((k) => {
-      if (payload[k] === null) delete payload[k];
-    });
+    Object.keys(payload).forEach(k => payload[k] === null && delete payload[k]);
 
     try {
       if (isEdit) {
@@ -117,7 +118,7 @@ export default function PostForm({ mode }) {
         await apiFetch('/publicaciones', { method: 'POST', body: payload, auth: true });
         alert('Publicación creada');
       }
-      nav('/');
+      nav('/publicaciones');
     } catch (e) {
       setError(e.message);
     }
@@ -132,8 +133,8 @@ export default function PostForm({ mode }) {
     );
   }
 
-  const hayCategorias = categorias.length > 0;
-  const hayFallback = categoriasFallback.length > 0;
+  const hayCategorias = Array.isArray(categorias) && categorias.length > 0;
+  const hayFallback = Array.isArray(categoriasFallback) && categoriasFallback.length > 0;
 
   return (
     <form onSubmit={onSubmit} style={{ display: 'grid', gap: 8, maxWidth: 520 }}>
@@ -142,7 +143,7 @@ export default function PostForm({ mode }) {
 
       <button type="button" onClick={() => nav(-1)} style={{ marginBottom: 8 }}>← Volver</button>
 
-      <label>Título (Obligatorio)</label>
+      <label>Título</label>
       <input
         name="title"
         value={form.title}
@@ -150,7 +151,7 @@ export default function PostForm({ mode }) {
         required
       />
 
-      <label>Contenido línea 1(Obligatorio)</label>
+      <label>Contenido línea 1</label>
       <input
         name="content_line1"
         value={form.content_line1}
@@ -158,17 +159,17 @@ export default function PostForm({ mode }) {
         required
       />
 
-      <label>Contenido línea 2</label>
+      <label>Contenido línea 2 (opcional)</label>
       <input
         name="content_line2"
-        value={form.content_line2|| ''}   // mantener controlado; nunca null
+        value={form.content_line2 ?? ''}   // controlado; nunca null
         onChange={onChange}
       />
 
-      <label>Imagen (URL)</label>
+      <label>Imagen (URL) (opcional)</label>
       <input
         name="image"
-        value={form.image ||''}           // mantener controlado; nunca null
+        value={form.image ?? ''}           // controlado; nunca null
         onChange={onChange}
       />
 
