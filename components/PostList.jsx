@@ -20,13 +20,13 @@ export default function PostList() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
-  const [loading, setLoading] = useState(false); // no borra lista; solo muestra "Cargando…"
+  const [loading, setLoading] = useState(false); 
   const [error, setError] = useState('');
 
   const token = getToken();
   const user = getUserFromToken();
 
-  // Debounce para q (evita múltiples fetch por tecla)
+  // 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedQ(q.trim()), 300);
     return () => clearTimeout(t);
@@ -40,12 +40,12 @@ export default function PostList() {
         const arr = Array.isArray(res?.data) ? res.data : [];
         setCategorias(arr);
       } catch {
-        setCategorias([]); // ante error, array vacío
+        setCategorias([]); 
       }
     })();
   }, []);
 
-  // Control de carreras entre requests
+  
   const reqSeq = useRef(0);
   const abortRef = useRef(null);
 
