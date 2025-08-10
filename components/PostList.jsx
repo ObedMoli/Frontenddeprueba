@@ -110,23 +110,29 @@ export default function PostList() {
       <h3>Publicaciones</h3>
       <ErrorBanner message={error} onClose={() => setError('')} />
 
-      <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
-        <input
-          placeholder="Buscar por título o contenido…"
-          value={q}
-          onChange={e => setQ(e.target.value)}
-          style={{ flex: 1 }}
-        />
-        <select value={cat} onChange={e => setCat(e.target.value)}>
-          <option value="">Todas</option>
-          {Array.isArray(categorias) && categorias.map(c => (
-            <option key={c.category_id} value={c.category_title}>
-              {c.category_title}
-            </option>
-          ))}
-        </select>
-        {token && <Link to="/crear">Crear</Link>}
-      </div>
+      <div style={{ marginBottom: 12 }}>
+  <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+    <input
+      placeholder="Buscar por título o contenido…"
+      value={q}
+      onChange={e => setQ(e.target.value)}
+      style={{ flex: 1 }}
+    />
+    {token && <Link to="/crear">Crear</Link>}
+  </div>
+  <select 
+    value={cat} 
+    onChange={e => setCat(e.target.value)}
+    style={{ width: '100%' }}
+  >
+    <option value="">Todas</option>
+    {Array.isArray(categorias) && categorias.map(c => (
+      <option key={c.category_id} value={c.category_title}>
+        {c.category_title}
+      </option>
+    ))}
+  </select>
+</div>
 
       {loading && <p style={{ opacity: 0.7 }}>Cargando…</p>}
       {!loading && items.length === 0 && <p>No hay publicaciones para mostrar.</p>}
