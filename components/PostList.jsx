@@ -63,7 +63,6 @@ export default function PostList() {
       if (abortRef.current) abortRef.current.abort();
       const controller = new AbortController();
       abortRef.current = controller;
-
       const mySeq = ++reqSeq.current;
 
       try {
@@ -84,11 +83,8 @@ export default function PostList() {
         try { data = await res.json(); }
         catch { data = { message: res.ok ? 'OK' : `HTTP ${res.status}` }; }
 
-        if (!res.ok) {
-          const baseMsg = data?.message || `Error HTTP ${res.status}`;
-          throw new Error(baseMsg);
-        }
-
+        if (!res.ok) throw new Error(data?.message || `Error HTTP ${res.status}`);
+        
         // Ignora si no es la última petición
         if (mySeq !== reqSeq.current) return;
 
@@ -97,8 +93,7 @@ export default function PostList() {
         setTotal(Number(payload.total || 0));
         setTotalPages(Number(payload.totalPages || 1));
       } catch (e) {
-        if (e.name === 'AbortError') return; // petición cancelada, ignora
-        setError(e.message || 'Error al cargar publicaciones');
+        if (e.name === 'AbortError') setError(e.message || 'Error al cargar publicaciones');
       } finally {
         if (mySeq === reqSeq.current) setLoading(false);
       }
@@ -111,7 +106,7 @@ export default function PostList() {
   }, [debouncedQ, cat, page]);
 
   return (
-    <div>
+    <div className="container">
       <h3>Publicaciones</h3>
       <ErrorBanner message={error} onClose={() => setError('')} />
 
@@ -136,19 +131,19 @@ export default function PostList() {
       {loading && <p style={{ opacity: 0.7 }}>Cargando…</p>}
       {!loading && items.length === 0 && <p>No hay publicaciones para mostrar.</p>}
 
-      <ul style={{ listStyle: 'none', padding: 0, display: 'grid', gap: 12 }}>
+      <ul className="post-list">
         {items.map(p => {
           const esDueno = !!token && user?.name && p.autor === user.name;
           return (
-            <li key={p.post_id} style={{ border: '1px solid #ddd', padding: 12, borderRadius: 8 }}>
-              <h4 style={{ margin: 0 }}>{p.title}</h4>
+            <li key={p.post_id} className="post-item">
+              <h4>{p.title}</h4>
               <small>
                 Autor: {p.autor} — Categoría: {p.categoria || 'N/A'} — Fecha: {formatDate(p.date)}
               </small>
               <p>{p.content_line1}</p>
               <div style={{ display: 'flex', gap: 8 }}>
-                <Link to={`/post/${p.post_id}`}>Ver</Link>
-                {esDueno && <Link to={`/editar/${p.post_id}`}>Editar</Link>}
+                <Link to={`/post/${p.post_id}`} className="btn">Ver</Link>
+                {esDueno && <Link to={`/editar/${p.post_id}`} className="btn">Editar</Link>}
               </div>
             </li>
           );

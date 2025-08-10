@@ -46,39 +46,41 @@ export default function Register() {
   };
 
   return (
-    <form onSubmit={onSubmit} style={{ display: 'grid', gap: 8, maxWidth: 420 }}>
-      <h3>Crear cuenta</h3>
-      <ErrorBanner message={error} onClose={() => setError('')} />
+    <div className="container">
+      <form onSubmit={onSubmit} className="card">
+        <h3>Crear cuenta</h3>
+        <ErrorBanner message={error} onClose={() => setError('')} />
 
-      <label>Nombre</label>
-      <input name="name" value={form.name} onChange={onChange} required />
+        <label>Nombre</label>
+        <input name="name" value={form.name} onChange={onChange} required />
 
-      <label>Email</label>
-      <input name="email" type="email" value={form.email} onChange={onChange} required />
+        <label>Email</label>
+        <input name="email" type="email" value={form.email} onChange={onChange} required />
 
-      <label>Contraseña (mín. 8)</label>
-      <input name="password" type="password" value={form.password} onChange={onChange} required />
+        <label>Contraseña (mín. 8)</label>
+        <input name="password" type="password" value={form.password} onChange={onChange} required />
 
-      <label>Teléfono (opcional)</label>
-      <input name="telefono" value={form.telefono} onChange={onChange} />
+        <label>Teléfono (opcional)</label>
+        <input name="telefono" value={form.telefono} onChange={onChange} />
 
-      <label>Sobre ti (opcional)</label>
-      <textarea name="about" value={form.about} onChange={onChange} />
+        <label>Sobre ti (opcional)</label>
+        <textarea name="about" value={form.about} onChange={onChange} />
 
-      <label>Rol</label>
-      {roles.length > 0 ? (
-        <select name="role_name" value={form.role_name} onChange={onChange}>
-          {roles.map(r => (
-            <option key={r.role_id} value={r.role_name}>{r.role_name}</option>
-          ))}
-        </select>
-      ) : (
-        <input name="role_name" value={form.role_name} onChange={onChange} />
-      )}
+        <label>Rol</label>
+        {roles.length > 0 ? (
+          <select name="role_name" value={form.role_name} onChange={onChange}>
+            {roles.map(r => (
+              <option key={r.role_id} value={r.role_name}>{r.role_name}</option>
+            ))}
+          </select>
+        ) : (
+          <input name="role_name" value={form.role_name} onChange={onChange} />
+        )}
 
-      <button type="submit">Registrarme</button>
+        <button type="submit">Registrarme</button>
 
-      <small>¿Ya tienes cuenta? <Link to="/login">Inicia sesión</Link></small>
-    </form>
+        <small>¿Ya tienes cuenta? <Link to="/login">Inicia sesión</Link></small>
+      </form>
+    </div>
   );
 }

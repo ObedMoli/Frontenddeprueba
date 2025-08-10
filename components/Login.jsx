@@ -28,30 +28,32 @@ export default function Login() {
   }
 
   return (
-    <form onSubmit={submit} style={{ display: 'grid', gap: 8, maxWidth: 360 }}>
-      <h3>Iniciar sesión</h3>
-      <ErrorBanner message={error} onClose={() => setError('')} />
+    <div className="container">
+      <form onSubmit={submit} className="card">
+        <h3>Iniciar sesión</h3>
+        <ErrorBanner message={error} onClose={() => setError('')} />
 
-      <input
-        placeholder="Email"
-        type="email"
-        value={email}
-        onChange={e => setEmail(e.target.value)}
-        required
-      />
-      <input
-        placeholder="Contraseña"
-        type="password"
-        value={password}
-        onChange={e => setPassword(e.target.value)}
-        required
-      />
+        <input
+          placeholder="Email"
+          type="email"
+          value={email}
+          onChange={e => setEmail(e.target.value)}
+          required
+        />
+        <input
+          placeholder="Contraseña"
+          type="password"
+          value={password}
+          onChange={e => setPassword(e.target.value)}
+          required
+        />
 
-      <button type="submit">Entrar</button>
+        <button type="submit">Entrar</button>
 
-      <small>
-        ¿No tienes cuenta? <Link to="/register">Regístrate</Link>
-      </small>
-    </form>
+        <small>
+          ¿No tienes cuenta? <Link to="/register">Regístrate</Link>
+        </small>
+      </form>
+    </div>
   );
 }

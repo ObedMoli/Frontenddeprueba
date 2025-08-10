@@ -86,32 +86,33 @@ export default function PostDetail() {
     }
   }
 
-  if (!post) return <p>Cargando...</p>;
+  if (!post) return <div className="container"><p>Cargando...</p></div>;
 
   return (
-    <div>
+    <div className="container">
       <ErrorBanner message={error} onClose={() => setError('')} />
+      <button className="btn" onClick={() => nav(-1)} style={{ marginBottom: 12 }}>← Volver</button>
 
-      <button onClick={() => nav(-1)} style={{ marginBottom: 12 }}>← Volver</button>
+      <div className="card">
+        <h3>{post.title}</h3>
+        <small>
+          Autor: {post.autor} — Categoría: {post.categoria || 'N/A'} — Fecha: {formatDate(post.date)}
+        </small>
 
-      <h3>{post.title}</h3>
-      <small>
-        Autor: {post.autor} — Categoría: {post.categoria || 'N/A'} — Fecha: {formatDate(post.date)}
-      </small>
+        {post.image && (
+          <div>
+            <img src={post.image} alt="" style={{ maxWidth: '100%', marginTop: 8, borderRadius: 8}} />
+          </div>
+        )}
 
-      {post.image && (
-        <div>
-          <img src={post.image} alt="" style={{ maxWidth: '100%', marginTop: 8 }} />
+        <p>{post.content_line1}</p>
+        {post.content_line2 && <p>{post.content_line2}</p>}
+
+        <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+          <Link to={`/post/${post.post_id}`}>Ver</Link>
+          {token && <Link to={`/editar/${post.post_id}`}>Editar</Link>}
+          {token && <button onClick={onDelete}>Eliminar</button>}
         </div>
-      )}
-
-      <p>{post.content_line1}</p>
-      {post.content_line2 && <p>{post.content_line2}</p>}
-
-      <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
-        <Link to={`/post/${post.post_id}`}>Ver</Link>
-        {token && <Link to={`/editar/${post.post_id}`}>Editar</Link>}
-        {token && <button onClick={onDelete}>Eliminar</button>}
       </div>
 
       <hr />
@@ -121,7 +122,7 @@ export default function PostDetail() {
       {Array.isArray(comentarios) && comentarios.length > 0 ? (
         <ul style={{ listStyle: 'none', padding: 0, display: 'grid', gap: 8 }}>
           {comentarios.map(c => (
-            <li key={c.comment_id} style={{ border: '1px solid #eee', padding: 8, borderRadius: 8 }}>
+            <li key={c.comment_id} className="card">
               <div style={{ display: 'flex', gap: 8, justifyContent: 'space-between' }}>
                 <strong>{c.autor || c.comment_by_user_name || 'Usuario'}</strong>
                 <small>{formatDate(c.date)}</small>
@@ -137,7 +138,7 @@ export default function PostDetail() {
 
       {/* Formulario de comentario: visible solo si hay token */}
       {token ? (
-        <form onSubmit={enviarComentario} style={{ marginTop: 12, display: 'grid', gap: 20 }}>
+        <form onSubmit={enviarComentario} className="card" style={{ marginTop: 12 }}>
           <textarea
             placeholder="Escribe tu comentario…"
             value={nuevoComentario}

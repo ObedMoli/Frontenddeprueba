@@ -7,7 +7,6 @@ export default function PostForm({ mode }) {
   const isEdit = mode === 'edit';
   const { id } = useParams();
   const nav = useNavigate();
-
   const user = getUserFromToken(); // { name }
 
   const [form, setForm] = useState({
@@ -126,9 +125,9 @@ export default function PostForm({ mode }) {
 
   if (isEdit && bloqueado) {
     return (
-      <div>
+      <div className="container">
         <ErrorBanner message={error} onClose={() => setError('')} />
-        <button onClick={() => nav(-1)}>← Volver</button>
+        <button className="btn" onClick={() => nav(-1)}>← Volver</button>
       </div>
     );
   }
@@ -137,83 +136,75 @@ export default function PostForm({ mode }) {
   const hayFallback = Array.isArray(categoriasFallback) && categoriasFallback.length > 0;
 
   return (
-    <form onSubmit={onSubmit} style={{ display: 'grid', gap: 8, maxWidth: 520 }}>
-      <h3>{isEdit ? 'Editar' : 'Crear'} publicación</h3>
-      <ErrorBanner message={error} onClose={() => setError('')} />
+    <div className="container">
+      <form onSubmit={onSubmit} className="card" >
+        <h3>{isEdit ? 'Editar' : 'Crear'} publicación</h3>
+        <ErrorBanner message={error} onClose={() => setError('')} />
 
-      <button type="button" onClick={() => nav(-1)} style={{ marginBottom: 8 }}>← Volver</button>
+        <button type="button" onClick={() => nav(-1)} style={{ marginBottom: 8 }}>← Volver</button>
 
-      <label>Título</label>
-      <input
-        name="title"
-        value={form.title}
-        onChange={onChange}
-        required
-      />
-
-      <label>Contenido línea 1</label>
-      <input
-        name="content_line1"
-        value={form.content_line1}
-        onChange={onChange}
-        required
-      />
-
-      <label>Contenido línea 2 (opcional)</label>
-      <input
-        name="content_line2"
-        value={form.content_line2 ?? ''}   // controlado; nunca null
-        onChange={onChange}
-      />
-
-      <label>Imagen (URL) (opcional)</label>
-      <input
-        name="image"
-        value={form.image ?? ''}           // controlado; nunca null
-        onChange={onChange}
-      />
-
-      <label>Categoría</label>
-      {hayCategorias ? (
-        <select
-          name="category_title"
-          value={form.category_title}
+        <label>Título</label>
+        <input
+          name="title"
+          value={form.title}
           onChange={onChange}
           required
-        >
-          <option value="" disabled>Selecciona una categoría</option>
-          {categorias.map(c => (
-            <option key={c.category_id} value={c.category_title}>
-              {c.category_title}
-            </option>
-          ))}
-        </select>
-      ) : hayFallback ? (
-        <select
-          name="category_title"
-          value={form.category_title}
+        />
+
+        <label>Contenido línea 1</label>
+        <input
+          name="content_line1"
+          value={form.content_line1}
           onChange={onChange}
           required
-        >
-          <option value="" disabled>Selecciona una categoría</option>
-          {categoriasFallback.map(c => (
-            <option key={c} value={c}>{c}</option>
-          ))}
-        </select>
-      ) : (
-        <>
-          <input
-            name="category_title"
-            value={form.category_title}
-            onChange={onChange}
-            placeholder="Escribe el nombre exacto de la categoría"
-            required
-          />
-          <small>Escribe el nombre exacto de una categoría existente.</small>
-        </>
-      )}
+        />
 
-      <button type="submit">{isEdit ? 'Guardar cambios' : 'Crear'}</button>
-    </form>
+        <label>Contenido línea 2 (opcional)</label>
+        <input
+          name="content_line2"
+          value={form.content_line2 ?? ''}   // controlado; nunca null
+          onChange={onChange}
+        />
+
+        <label>Imagen (URL) (opcional)</label>
+        <input
+          name="image"
+          value={form.image ?? ''}           // controlado; nunca null
+          onChange={onChange}
+        />
+
+        <label>Categoría</label>
+        {hayCategorias ? (
+          <select name="category_title" value={form.category_title} onChange={onChange} required>
+            <option value="" disabled>Selecciona una categoría</option>
+            {categorias.map(c => (
+              <option key={c.category_id} value={c.category_title}>
+                {c.category_title}
+              </option>
+            ))}
+          </select>
+        ) : hayFallback ? (
+          <select name="category_title" value={form.category_title} onChange={onChange} required>
+            <option value="" disabled>Selecciona una categoría</option>
+            {categoriasFallback.map(c => (
+              <option key={c} value={c}>{c}</option>
+            ))}
+          </select>
+        ) : (
+          <>
+            <input
+              name="category_title"
+              value={form.category_title}
+              onChange={onChange}
+              placeholder="Escribe el nombre exacto de la categoría"
+              required
+            />
+            <small>Escribe el nombre exacto de una categoría existente.</small>
+          </>
+        )}
+
+        <button type="submit">{isEdit ? 'Guardar cambios' : 'Crear'}</button>
+      </form>
+    </div>
   );
 }
